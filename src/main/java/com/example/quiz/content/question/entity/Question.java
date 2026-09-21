@@ -6,38 +6,41 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
+/**
+ * Вопрос
+ */
 @Getter
 @Setter
 @Entity
 @Table(name = "question")
+@NoArgsConstructor
 public class Question {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, updatable = false)
+    private UUID uuid;
 
-    @Column(name = "topic_id", nullable = false)
-    private Long topicId;
+    @Column(name = "topic_uuid", nullable = false)
+    private UUID topicUuid;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, length = 150)
     private String slug;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false)
     private String question;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false)
     private String answer;
 
-    @Column(columnDefinition = "TEXT")
     private String explanation;
 
     @Enumerated(EnumType.STRING)
@@ -54,8 +57,6 @@ public class Question {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "published_at")
     private Instant publishedAt;
-
-    public Question() {
-    }
 }

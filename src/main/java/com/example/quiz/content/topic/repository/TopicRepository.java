@@ -1,33 +1,29 @@
 package com.example.quiz.content.topic.repository;
 
-import com.example.quiz.content.common.ContentStatus;
 import com.example.quiz.content.topic.entity.Topic;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface TopicRepository extends JpaRepository<Topic, Long> {
+/**
+ * JPA репозиторий тем
+ */
+public interface TopicRepository extends JpaRepository<Topic, UUID> {
 
+    /**
+     * Найти тему по слагу
+     *
+     * @param slug слаг
+     * @return тема
+     */
     Optional<Topic> findBySlug(String slug);
 
+    /**
+     * Проверить существование темы по слагу
+     *
+     * @param slug слаг
+     * @return да / нет
+     */
     boolean existsBySlug(String slug);
-
-    @Modifying
-    @Query("""
-        update Topic t
-        set t.status = :status,
-            t.updatedAt = :updatedAt,
-            t.publishedAt = :publishedAt
-        where t.id = :id
-        """)
-    int updateStatus(
-            @Param("id") Long id,
-            @Param("status") ContentStatus status,
-            @Param("updatedAt") OffsetDateTime updatedAt,
-            @Param("publishedAt") OffsetDateTime publishedAt
-    );
 }

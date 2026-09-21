@@ -1,25 +1,27 @@
-package com.example.quiz.content.question.dto;
+package com.example.quiz.content.question.query;
 
 import com.example.quiz.content.question.QuestionDifficulty;
-import lombok.Builder;
 
 import java.util.UUID;
 
 /**
- * DTO ответа с предпросмотром вопроса (для списка)
+ * Содержание вопроса
  *
  * @param uuid UUID вопроса
  * @param topicUuid UUID темы
  * @param slug слаг
  * @param question вопрос
+ * @param answer ответ
+ * @param explanation объяснение
  * @param difficulty сложность
  */
-@Builder
-public record QuestionListResponse(
+public record QuestionDetailsView(
         UUID uuid,
         UUID topicUuid,
         String slug,
         String question,
+        String answer,
+        String explanation,
         QuestionDifficulty difficulty
 ) {
 }

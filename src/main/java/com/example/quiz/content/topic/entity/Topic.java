@@ -5,49 +5,40 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
+/**
+ * Тема
+ */
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "topic",
-        indexes = {
-                @Index(
-                        name = "idx_topic_parent_id",
-                        columnList = "parent_id"
-                ),
-                @Index(
-                        name = "idx_topic_status_sort",
-                        columnList = "status, sort_order, id"
-                )
-        }
-)
+@NoArgsConstructor
+@Table(name = "topic")
 public class Topic {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, updatable = false)
+    private UUID uuid;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, length = 150)
     private String slug;
 
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(columnDefinition = "text")
+    @Column
     private String description;
 
     @Column(name = "parent_id")
-    private Long parentId;
+    private UUID parentUuid;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -62,9 +53,6 @@ public class Topic {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column
+    @Column(name = "published_at")
     private Instant publishedAt;
-
-    public Topic() {
-    }
 }

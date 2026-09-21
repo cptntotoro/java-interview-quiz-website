@@ -1,30 +1,34 @@
 package com.example.quiz.content.question.dto;
 
-import com.example.quiz.content.common.ContentStatus;
 import com.example.quiz.content.question.QuestionDifficulty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
 /**
- * DTO ответа с полным вопросом
+ * DTO запроса на обновление вопроса
  *
- * @param uuid
- * @param topicUuid
- * @param slug слаг
+ * @param topicUuid UUID темы
  * @param question вопрос
  * @param answer ответ
  * @param explanation объяснение
  * @param difficulty сложность
- * @param status статус
  */
-public record QuestionResponse(
-        UUID uuid,
+public record QuestionUpdateRequest(
+
+        @NotNull
         UUID topicUuid,
-        String slug,
+
+        @NotBlank
         String question,
+
+        @NotBlank
         String answer,
+
         String explanation,
-        QuestionDifficulty difficulty,
-        ContentStatus status
+
+        @NotNull
+        QuestionDifficulty difficulty
 ) {
 }

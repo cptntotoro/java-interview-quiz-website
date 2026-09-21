@@ -1,22 +1,19 @@
-package com.example.quiz.content.topic.dto;
-
-import lombok.Builder;
+package com.example.quiz.content.topic.query;
 
 import java.util.UUID;
 
 /**
- * DTO ответа темы
+ * Модель темы из БД для детального просмотра темы
  *
  * @param uuid UUID темы
  * @param slug слаг
  * @param name название
  * @param description описание
  * @param parentUuid UUID родителя
- * @param status статус
- * @param sortOrder порядок сортировки
+ * @param status статус темы
+ * @param sortOrder сортировка
  */
-@Builder
-public record TopicResponse(
+public record TopicDetailsView(
         UUID uuid,
         String slug,
         String name,

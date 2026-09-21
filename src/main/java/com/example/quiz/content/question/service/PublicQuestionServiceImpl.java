@@ -2,8 +2,10 @@ package com.example.quiz.content.question.service;
 
 import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.exception.QuestionNotFoundException;
-import com.example.quiz.content.question.dto.QuestionDetailsResponse;
-import com.example.quiz.content.question.dto.QuestionListResponse;
+import com.example.quiz.common.query.SortDirection;
+import com.example.quiz.content.question.query.QuestionDetailsView;
+import com.example.quiz.content.question.query.QuestionListView;
+import com.example.quiz.content.question.query.QuestionSortField;
 import com.example.quiz.content.question.repository.QuestionQueryRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +14,14 @@ import java.util.List;
 @Service
 public class PublicQuestionServiceImpl implements PublicQuestionService {
 
-    private static final int DEFAULT_LIMIT = 20;
-    private static final int MAX_LIMIT = 100;
+    /**
+     * Максимальный размер страницы
+     */
+    private static final int MAX_SIZE = 100;
 
+    /**
+     * Репозиторий для чтения опубликованных вопрсов
+     */
     private final QuestionQueryRepository questionQueryRepository;
 
     public PublicQuestionServiceImpl(QuestionQueryRepository questionQueryRepository) {
@@ -22,36 +29,37 @@ public class PublicQuestionServiceImpl implements PublicQuestionService {
     }
 
     @Override
-    public PageResponse<QuestionListResponse> findPublished(Integer requestedLimit, Long afterId) {
-        int limit = normalizeLimit(requestedLimit);
+    public PageResponse<QuestionListView> findPublished(int page, int size, QuestionSortField sort, SortDirection direction) {
+        validatePage(page);
+        int normalizedSize = normalizeSize(size);
 
-        List<QuestionListResponse> questions = questionQueryRepository.findPublished(afterId, limit + 1);
+        List<QuestionListView> questions = questionQueryRepository.findPublished(page, normalizedSize, sort, direction);
 
-        boolean hasNext = questions.size() > limit;
+        boolean hasNext = questions.size() > normalizedSize;
 
         if (hasNext) {
-            questions = questions.subList(0, limit);
+            questions = questions.subList(0, normalizedSize);
         }
 
-        Long nextCursor = hasNext ? questions.getLast().id() : null;
-
-        return new PageResponse<>(questions, limit, nextCursor, hasNext);
+        return new PageResponse<>(questions, page, normalizedSize, hasNext);
     }
 
     @Override
-    public QuestionDetailsResponse findPublishedBySlug(String slug) {
+    public QuestionDetailsView findPublishedBySlug(String slug) {
         return questionQueryRepository.findPublishedBySlug(slug).orElseThrow(() -> new QuestionNotFoundException(slug));
     }
 
-    private int normalizeLimit(Integer requestedLimit) {
-        if (requestedLimit == null) {
-            return DEFAULT_LIMIT;
+    private void validatePage(int page) {
+        if (page < 0) {
+            throw new IllegalArgumentException("номер страницы должен быть больше или равен 0");
+        }
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            throw new IllegalArgumentException("размер страницы должен быть больше 0");
         }
 
-        if (requestedLimit < 1) {
-            throw new IllegalArgumentException("limit must be greater than 0");
-        }
-
-        return Math.min(requestedLimit, MAX_LIMIT);
+        return Math.min(size, MAX_SIZE);
     }
 }

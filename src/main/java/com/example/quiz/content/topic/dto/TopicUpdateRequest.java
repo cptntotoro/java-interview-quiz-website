@@ -6,18 +6,14 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 /**
- * DTO запроса на создание темы
+ * DTO запроса на обновление темы
  *
- * @param slug слаг
  * @param name название
  * @param description описание
  * @param parentUuid UUID родителя
+ * @param sortOrder порядок сортировки
  */
-public record TopicCreateRequest(
-
-        @NotBlank
-        @Size(max = 150)
-        String slug,
+public record TopicUpdateRequest(
 
         @NotBlank
         @Size(max = 255)
@@ -25,6 +21,8 @@ public record TopicCreateRequest(
 
         String description,
 
-        UUID parentUuid
+        UUID parentUuid,
+
+        Integer sortOrder
 ) {
 }
