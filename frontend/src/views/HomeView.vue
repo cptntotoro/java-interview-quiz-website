@@ -58,6 +58,7 @@ onMounted(async () => {
             v-for="topic in topics"
             :key="topic.uuid"
             :name="topic.name"
+            :slug="topic.slug"
           />
         </div>
       </div>
