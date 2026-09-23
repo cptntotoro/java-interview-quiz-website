@@ -4,6 +4,10 @@ defineProps({
     type: String,
     required: true,
   },
+  slug: {
+    type: String,
+    required: true,
+  },
 })
 </script>
 
@@ -11,9 +15,13 @@ defineProps({
   <article class="topic-card">
     <h2>{{ name }}</h2>
 
-    <button>
+    <RouterLink
+      :to="`/topics/${slug}`"
+      class="start-button"
+    >
       Начать
-    </button>
+    </RouterLink>
+
   </article>
 </template>
 
@@ -27,5 +35,14 @@ defineProps({
 
 .topic-card h2 {
   margin: 0 0 16px;
+}
+
+.start-button {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #333;
+  color: white;
+  text-decoration: none;
 }
 </style>
