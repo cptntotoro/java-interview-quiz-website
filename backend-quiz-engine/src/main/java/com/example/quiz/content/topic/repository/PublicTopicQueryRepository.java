@@ -10,14 +10,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Репозиторий для чтения тем
+ * Репозиторий для публичного чтения тем
  */
 @Repository
-public class TopicQueryRepository {
+public class PublicTopicQueryRepository {
 
     private final JdbcClient jdbcClient;
 
-    public TopicQueryRepository(JdbcClient jdbcClient) {
+    public PublicTopicQueryRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
     }
 
@@ -40,19 +40,20 @@ public class TopicQueryRepository {
                         WHERE status = 'PUBLISHED'
                         ORDER BY sort_order, uuid
                         """)
-                .query((rs, rowNum) ->
-                        new TopicListView(rs.getObject("uuid", UUID.class),
-                                rs.getString("slug"),
-                                rs.getString("name"),
-                                rs.getString("description"),
-                                rs.getObject("parent_uuid", UUID.class),
-                                rs.getString("status"),
-                                rs.getInt("sort_order"))
-                ).list();
+                .query((rs, rowNum) -> new TopicListView(
+                        rs.getObject("uuid", UUID.class),
+                        rs.getString("slug"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getObject("parent_uuid", UUID.class),
+                        rs.getString("status"),
+                        rs.getInt("sort_order")
+                ))
+                .list();
     }
 
     /**
-     * Получить тему по слагу
+     * Получить опубликованную тему по слагу
      *
      * @param slug слаг
      * @return модель темы из БД для детального просмотра темы
@@ -72,10 +73,15 @@ public class TopicQueryRepository {
                           AND status = 'PUBLISHED'
                         """)
                 .param("slug", slug)
-                .query((rs, rowNum) -> new TopicDetailsView(rs.getObject("uuid", UUID.class),
-                        rs.getString("slug"), rs.getString("name"),
-                        rs.getString("description"), rs.getObject("parent_uuid", UUID.class),
-                        rs.getString("status"), rs.getInt("sort_order"))
-                ).optional();
+                .query((rs, rowNum) -> new TopicDetailsView(
+                        rs.getObject("uuid", UUID.class),
+                        rs.getString("slug"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getObject("parent_uuid", UUID.class),
+                        rs.getString("status"),
+                        rs.getInt("sort_order")
+                ))
+                .optional();
     }
 }

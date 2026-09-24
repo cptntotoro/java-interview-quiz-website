@@ -9,7 +9,7 @@ import java.util.UUID;
 /**
  * DTO запроса на массовую публикацию вопросов
  */
-public record QuestionBatchPublishRequest(
+public record AdminQuestionBatchPublishRequest(
 
         @NotEmpty
         @Size(max = 100)

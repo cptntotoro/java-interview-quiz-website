@@ -1,6 +1,6 @@
 CREATE TABLE topic
 (
-    uuid         UUID         NOT NULL PRIMARY KEY,
+    uuid         UUID         NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     slug         VARCHAR(150) NOT NULL,
     name         VARCHAR(255) NOT NULL,
     description  TEXT,
