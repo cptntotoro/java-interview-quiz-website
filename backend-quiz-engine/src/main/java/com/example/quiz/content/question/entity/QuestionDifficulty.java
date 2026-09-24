@@ -1,4 +1,4 @@
-package com.example.quiz.content.question;
+package com.example.quiz.content.question.entity;
 
 public enum QuestionDifficulty {
     EASY,

@@ -2,9 +2,10 @@ package com.example.quiz.content.question.repository;
 
 import com.example.quiz.content.question.entity.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -21,10 +22,15 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
     boolean existsBySlug(String slug);
 
     /**
-     * Получить вопросы по списку слагов
+     * Получить список дублирующихся слагов
      *
      * @param slugs список слагов
-     * @return существующие вопросы
+     * @return уже существующие слаги
      */
-    List<Question> findAllBySlugIn(Collection<String> slugs);
+    @Query("""
+            SELECT q.slug
+            FROM Question q
+            WHERE q.slug IN :slugs
+            """)
+    Set<String> findExistingSlugs(Collection<String> slugs);
 }

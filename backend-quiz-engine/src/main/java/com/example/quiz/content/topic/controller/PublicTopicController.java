@@ -1,7 +1,8 @@
 package com.example.quiz.content.topic.controller;
 
-import com.example.quiz.content.topic.dto.TopicResponse;
-import com.example.quiz.content.topic.mapper.TopicQueryMapper;
+import com.example.quiz.content.topic.dto.PublicTopicDetailsResponse;
+import com.example.quiz.content.topic.dto.PublicTopicResponse;
+import com.example.quiz.content.topic.mapper.PublicTopicQueryMapper;
 import com.example.quiz.content.topic.service.PublicTopicService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,20 +23,20 @@ public class PublicTopicController {
     /**
      * Маппер тем из БД в DTO ответа
      */
-    private final TopicQueryMapper topicQueryMapper;
+    private final PublicTopicQueryMapper publicTopicQueryMapper;
 
-    public PublicTopicController(PublicTopicService publicTopicService, TopicQueryMapper topicQueryMapper) {
+    public PublicTopicController(PublicTopicService publicTopicService, PublicTopicQueryMapper publicTopicQueryMapper) {
         this.publicTopicService = publicTopicService;
-        this.topicQueryMapper = topicQueryMapper;
+        this.publicTopicQueryMapper = publicTopicQueryMapper;
     }
 
     @GetMapping
-    public List<TopicResponse> findPublished() {
-        return topicQueryMapper.toTopicResponseList(publicTopicService.findPublished());
+    public List<PublicTopicResponse> findPublished() {
+        return publicTopicQueryMapper.toListResponse(publicTopicService.findPublished());
     }
 
     @GetMapping("/{slug}")
-    public TopicResponse findPublishedBySlug(@PathVariable String slug) {
-        return topicQueryMapper.toTopicResponse(publicTopicService.findPublishedBySlug(slug));
+    public PublicTopicDetailsResponse findPublishedBySlug(@PathVariable String slug) {
+        return publicTopicQueryMapper.toDetailsResponse(publicTopicService.findPublishedBySlug(slug));
     }
 }

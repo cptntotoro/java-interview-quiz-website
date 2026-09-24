@@ -1,27 +1,25 @@
 package com.example.quiz.content.question.query;
 
-import com.example.quiz.content.question.QuestionDifficulty;
+import com.example.quiz.content.question.entity.QuestionDifficulty;
+import com.example.quiz.content.question.entity.QuestionType;
 
 import java.util.UUID;
 
 /**
- * Содержание вопроса
+ * Запрос на предпросмотр вопрооа (для списка)
  *
  * @param uuid UUID вопроса
  * @param topicUuid UUID темы
  * @param slug слаг
  * @param question вопрос
- * @param answer ответ
- * @param explanation объяснение
  * @param difficulty сложность
  */
-public record QuestionDetailsView(
+public record PublicQuestionListView(
         UUID uuid,
         UUID topicUuid,
         String slug,
         String question,
-        String answer,
-        String explanation,
+        QuestionType type,
         QuestionDifficulty difficulty
 ) {
 }

@@ -1,11 +1,12 @@
 package com.example.quiz.content.topic.dto;
 
+import com.example.quiz.content.common.ContentStatus;
 import lombok.Builder;
 
 import java.util.UUID;
 
 /**
- * DTO ответа темы
+ * DTO ответа темы для админки
  *
  * @param uuid UUID темы
  * @param slug слаг
@@ -16,13 +17,13 @@ import java.util.UUID;
  * @param sortOrder порядок сортировки
  */
 @Builder
-public record TopicResponse(
+public record AdminTopicResponse(
         UUID uuid,
         String slug,
         String name,
         String description,
         UUID parentUuid,
-        String status,
+        ContentStatus status,
         Integer sortOrder
 ) {
 }
