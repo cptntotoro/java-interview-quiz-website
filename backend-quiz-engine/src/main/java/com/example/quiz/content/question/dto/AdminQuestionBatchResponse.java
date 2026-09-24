@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Результат массового создания вопросов
  */
-public record QuestionBatchResponse(
-        List<QuestionResponse> questions
+public record AdminQuestionBatchResponse(
+        List<AdminQuestionResponse> questions
 ) {
 }

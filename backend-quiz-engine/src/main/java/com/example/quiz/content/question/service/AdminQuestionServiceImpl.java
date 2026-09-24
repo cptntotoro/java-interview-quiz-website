@@ -1,14 +1,20 @@
 package com.example.quiz.content.question.service;
 
+import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.exception.DuplicateSlugException;
 import com.example.quiz.common.exception.QuestionNotFoundException;
 import com.example.quiz.common.exception.TopicNotFoundException;
+import com.example.quiz.common.query.SortDirection;
 import com.example.quiz.content.common.ContentStatus;
-import com.example.quiz.content.question.dto.QuestionBatchCreateRequest;
-import com.example.quiz.content.question.dto.QuestionBatchPublishRequest;
-import com.example.quiz.content.question.dto.QuestionCreateRequest;
-import com.example.quiz.content.question.dto.QuestionUpdateRequest;
+import com.example.quiz.content.question.dto.AdminQuestionBatchCreateRequest;
+import com.example.quiz.content.question.dto.AdminQuestionBatchPublishRequest;
+import com.example.quiz.content.question.dto.AdminQuestionCreateRequest;
+import com.example.quiz.content.question.dto.AdminQuestionUpdateRequest;
 import com.example.quiz.content.question.entity.Question;
+import com.example.quiz.content.question.entity.QuestionDifficulty;
+import com.example.quiz.content.question.query.AdminQuestionListView;
+import com.example.quiz.content.question.query.QuestionSortField;
+import com.example.quiz.content.question.repository.AdminQuestionQueryRepository;
 import com.example.quiz.content.question.repository.QuestionRepository;
 import com.example.quiz.content.topic.entity.Topic;
 import com.example.quiz.content.topic.repository.TopicRepository;
@@ -23,7 +29,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class QuestionServiceImpl implements QuestionService {
+public class AdminQuestionServiceImpl implements AdminQuestionService {
+
+    /**
+     * Максимальный размер страницы
+     */
+    private static final int MAX_SIZE = 100;
 
     /**
      * JPA репозиторий вопросов
@@ -31,18 +42,43 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
 
     /**
-     * JPA репозиторий тем
+     * Репозиторий тем
      */
     private final TopicRepository topicRepository;
 
-    public QuestionServiceImpl(QuestionRepository questionRepository, TopicRepository topicRepository) {
+    /**
+     * Репозиторий для чтения вопросов в админке
+     */
+    private final AdminQuestionQueryRepository questionQueryRepository;
+
+    public AdminQuestionServiceImpl(QuestionRepository questionRepository, TopicRepository topicRepository,
+                                    AdminQuestionQueryRepository questionQueryRepository) {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
+        this.questionQueryRepository = questionQueryRepository;
+    }
+
+    @Override
+    public PageResponse<AdminQuestionListView> find(QuestionDifficulty difficulty, ContentStatus status, int page,
+                                                    int size, QuestionSortField sort, SortDirection direction) {
+        validatePage(page);
+        int normalizedSize = normalizeSize(size);
+
+        List<AdminQuestionListView> questions = questionQueryRepository.find(difficulty, status, page,
+                normalizedSize, sort, direction);
+
+        boolean hasNext = questions.size() > normalizedSize;
+
+        if (hasNext) {
+            questions = questions.subList(0, normalizedSize);
+        }
+
+        return new PageResponse<>(questions, page, normalizedSize, hasNext);
     }
 
     @Transactional
     @Override
-    public Question create(QuestionCreateRequest request) {
+    public Question create(AdminQuestionCreateRequest request) {
         if (!topicRepository.existsById(request.topicUuid())) {
             throw new TopicNotFoundException(request.topicUuid());
         }
@@ -59,6 +95,7 @@ public class QuestionServiceImpl implements QuestionService {
         question.setQuestion(request.question());
         question.setAnswer(request.answer());
         question.setExplanation(request.explanation());
+        question.setType(request.type());
         question.setDifficulty(request.difficulty());
         question.setStatus(ContentStatus.DRAFT);
         question.setCreatedAt(now);
@@ -69,23 +106,28 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Transactional
     @Override
-    public List<Question> createBatch(QuestionBatchCreateRequest request) {
-
-        Set<String> slugs = request.questions().stream().map(QuestionCreateRequest::slug).collect(Collectors.toSet());
+    public List<Question> createBatch(AdminQuestionBatchCreateRequest request) {
+        Set<String> slugs = request.questions().stream()
+                .map(AdminQuestionCreateRequest::slug)
+                .collect(Collectors.toSet());
 
         if (slugs.size() != request.questions().size()) {
             throw new DuplicateSlugException("В запросе присутствуют одинаковые слаги");
         }
 
-        Set<String> existingSlugs = questionRepository.findAllBySlugIn(slugs).stream().map(Question::getSlug).collect(Collectors.toSet());
+        Set<String> existingSlugs = questionRepository.findExistingSlugs(slugs);
 
         if (!existingSlugs.isEmpty()) {
             throw new DuplicateSlugException("Вопросы с такими слагами уже существуют: " + existingSlugs);
         }
 
-        Set<UUID> topicUuids = request.questions().stream().map(QuestionCreateRequest::topicUuid).collect(Collectors.toSet());
+        Set<UUID> topicUuids = request.questions().stream()
+                .map(AdminQuestionCreateRequest::topicUuid)
+                .collect(Collectors.toSet());
 
-        Set<UUID> existingTopicUuids = topicRepository.findAllById(topicUuids).stream().map(Topic::getUuid).collect(Collectors.toSet());
+        Set<UUID> existingTopicUuids = topicRepository.findAllById(topicUuids).stream()
+                .map(Topic::getUuid)
+                .collect(Collectors.toSet());
 
         if (existingTopicUuids.size() != topicUuids.size()) {
             Set<UUID> missingTopicUuids = new HashSet<>(topicUuids);
@@ -96,30 +138,33 @@ public class QuestionServiceImpl implements QuestionService {
 
         Instant now = Instant.now();
 
-        List<Question> questions = request.questions().stream().map(questionRequest -> {
-            Question question = new Question();
+        List<Question> questions = request.questions().stream()
+                .map(questionRequest -> {
+                    Question question = new Question();
 
-            question.setUuid(UUID.randomUUID());
-            question.setTopicUuid(questionRequest.topicUuid());
-            question.setSlug(questionRequest.slug());
-            question.setQuestion(questionRequest.question());
-            question.setAnswer(questionRequest.answer());
-            question.setExplanation(questionRequest.explanation());
-            question.setDifficulty(questionRequest.difficulty());
-            question.setStatus(ContentStatus.DRAFT);
-            question.setCreatedAt(now);
-            question.setUpdatedAt(now);
+                    question.setUuid(UUID.randomUUID());
+                    question.setTopicUuid(questionRequest.topicUuid());
+                    question.setSlug(questionRequest.slug());
+                    question.setQuestion(questionRequest.question());
+                    question.setAnswer(questionRequest.answer());
+                    question.setExplanation(questionRequest.explanation());
+                    question.setType(questionRequest.type());
+                    question.setDifficulty(questionRequest.difficulty());
+                    question.setStatus(ContentStatus.DRAFT);
+                    question.setCreatedAt(now);
+                    question.setUpdatedAt(now);
 
-            return question;
-        }).toList();
+                    return question;
+                }).toList();
 
         return questionRepository.saveAll(questions);
     }
 
     @Transactional
     @Override
-    public Question update(UUID uuid, QuestionUpdateRequest request) {
-        Question question = questionRepository.findById(uuid).orElseThrow(() -> new QuestionNotFoundException(uuid));
+    public Question update(UUID uuid, AdminQuestionUpdateRequest request) {
+        Question question = questionRepository.findById(uuid)
+                .orElseThrow(() -> new QuestionNotFoundException(uuid));
 
         if (!topicRepository.existsById(request.topicUuid())) {
             throw new TopicNotFoundException(request.topicUuid());
@@ -129,6 +174,7 @@ public class QuestionServiceImpl implements QuestionService {
         question.setQuestion(request.question());
         question.setAnswer(request.answer());
         question.setExplanation(request.explanation());
+        question.setType(request.type());
         question.setDifficulty(request.difficulty());
         question.setUpdatedAt(Instant.now());
 
@@ -138,7 +184,8 @@ public class QuestionServiceImpl implements QuestionService {
     @Transactional
     @Override
     public Question publish(UUID uuid) {
-        Question question = questionRepository.findById(uuid).orElseThrow(() -> new QuestionNotFoundException(uuid));
+        Question question = questionRepository.findById(uuid)
+                .orElseThrow(() -> new QuestionNotFoundException(uuid));
 
         if (!question.getStatus().canPublish()) {
             throw new IllegalStateException("Только вопросы из черновика могут быть опубликованы");
@@ -155,8 +202,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Transactional
     @Override
-    public List<Question> publishBatch(QuestionBatchPublishRequest request) {
-
+    public List<Question> publishBatch(AdminQuestionBatchPublishRequest request) {
         Set<UUID> requestedUuids = new HashSet<>(request.uuids());
 
         if (requestedUuids.size() != request.uuids().size()) {
@@ -179,7 +225,6 @@ public class QuestionServiceImpl implements QuestionService {
         Instant now = Instant.now();
 
         for (Question question : questions) {
-
             if (!question.getStatus().canPublish()) {
                 throw new IllegalStateException("Только вопросы из черновика могут быть опубликованы: " + question.getUuid());
             }
@@ -195,7 +240,8 @@ public class QuestionServiceImpl implements QuestionService {
     @Transactional
     @Override
     public Question archive(UUID uuid) {
-        Question question = questionRepository.findById(uuid).orElseThrow(() -> new QuestionNotFoundException(uuid));
+        Question question = questionRepository.findById(uuid)
+                .orElseThrow(() -> new QuestionNotFoundException(uuid));
 
         if (!question.getStatus().canArchive()) {
             throw new IllegalStateException("Архивированные вопросы не могут быть архивированы");
@@ -205,5 +251,19 @@ public class QuestionServiceImpl implements QuestionService {
         question.setUpdatedAt(Instant.now());
 
         return questionRepository.save(question);
+    }
+
+    private void validatePage(int page) {
+        if (page < 0) {
+            throw new IllegalArgumentException("номер страницы должен быть больше или равен 0");
+        }
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            throw new IllegalArgumentException("размер страницы должен быть больше 0");
+        }
+
+        return Math.min(size, MAX_SIZE);
     }
 }

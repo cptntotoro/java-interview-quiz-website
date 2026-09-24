@@ -9,10 +9,10 @@ import java.util.List;
 /**
  * DTO запроса на создание списка вопросов
  */
-public record QuestionBatchCreateRequest(
+public record AdminQuestionBatchCreateRequest(
 
         @NotEmpty
         @Size(max = 100)
-        List<@Valid QuestionCreateRequest> questions
+        List<@Valid AdminQuestionCreateRequest> questions
 ) {
 }

@@ -21,7 +21,7 @@ public interface PublicTopicService {
      * Найти опубликованную тему по слагу
      *
      * @param slug слаг
-     * @return DTO ответа темы
+     * @return Модель темы из БД для детального просмотра темы
      */
     TopicDetailsView findPublishedBySlug(String slug);
 }

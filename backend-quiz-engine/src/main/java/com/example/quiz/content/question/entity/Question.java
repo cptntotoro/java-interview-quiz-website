@@ -1,7 +1,6 @@
 package com.example.quiz.content.question.entity;
 
 import com.example.quiz.content.common.ContentStatus;
-import com.example.quiz.content.question.QuestionDifficulty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +37,10 @@ public class Question {
     private String answer;
 
     private String explanation;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_type", nullable = false, length = 30)
+    private QuestionType type;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

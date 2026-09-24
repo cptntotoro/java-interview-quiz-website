@@ -2,8 +2,9 @@ package com.example.quiz.content.question.service;
 
 import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.query.SortDirection;
-import com.example.quiz.content.question.query.QuestionDetailsView;
-import com.example.quiz.content.question.query.QuestionListView;
+import com.example.quiz.content.question.entity.QuestionDifficulty;
+import com.example.quiz.content.question.query.PublicQuestionDetailsView;
+import com.example.quiz.content.question.query.PublicQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
 
 /**
@@ -12,21 +13,38 @@ import com.example.quiz.content.question.query.QuestionSortField;
 public interface PublicQuestionService {
 
     /**
-     * Получить опубликованные вопросы с пагинацией
+     * Получить опубликованные вопросы по сложности с пагинацией
      *
-     * @param page      номер страницы (0-based)
-     * @param size      размер страницы
-     * @param sort      сортировка
-     * @param direction направление сортировки
+     * @param difficulty сложность
+     * @param page       номер страницы (0-based)
+     * @param size       размер страницы
+     * @param sort       сортировка
+     * @param direction  направление сортировки
      * @return страница вопросов
      */
-    PageResponse<QuestionListView> findPublished(int page, int size, QuestionSortField sort, SortDirection direction);
+    PageResponse<PublicQuestionListView> findPublishedByDifficulty(QuestionDifficulty difficulty, int page, int size,
+                                                                   QuestionSortField sort, SortDirection direction);
 
     /**
-     * Получить опубликованные вопросы по слагу
+     * Получить опубликованный вопрос по слагу
      *
      * @param slug слаг вопроса
      * @return детали вопроса
      */
-    QuestionDetailsView findPublishedBySlug(String slug);
+    PublicQuestionDetailsView findPublishedBySlug(String slug);
+
+    /**
+     * Получить опубликованные вопросы темы
+     *
+     * @param topicSlug  слаг темы
+     * @param difficulty сложность
+     * @param page       номер страницы
+     * @param size       размер страницы
+     * @param sort       сортировка
+     * @param direction  направление сортировки
+     * @return страница вопросов
+     */
+    PageResponse<PublicQuestionListView> findPublishedByTopicAndDifficulty(String topicSlug, QuestionDifficulty difficulty,
+                                                                           int page, int size, QuestionSortField sort,
+                                                                           SortDirection direction);
 }
