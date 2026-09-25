@@ -1,7 +1,9 @@
 package com.example.quiz.content.question.mapper;
 
-import com.example.quiz.content.question.dto.PublicQuestionDetailsResponse;
+import com.example.quiz.content.question.dto.AdminQuestionResponse;
 import com.example.quiz.content.question.dto.PublicQuestionListResponse;
+import com.example.quiz.content.question.dto.QuestionAnswerResponse;
+import com.example.quiz.content.question.query.PublicQuestionAnswerView;
 import com.example.quiz.content.question.query.PublicQuestionDetailsView;
 import com.example.quiz.content.question.query.PublicQuestionListView;
 import org.springframework.stereotype.Component;
@@ -35,8 +37,8 @@ public class QuestionQueryMapper {
      * @param view содержание вопроса
      * @return DTO ответа с содержанием вопроса
      */
-    public PublicQuestionDetailsResponse toDetailsResponse(PublicQuestionDetailsView view) {
-        return PublicQuestionDetailsResponse.builder()
+    public AdminQuestionResponse toQuestionResponse(PublicQuestionDetailsView view) {
+        return AdminQuestionResponse.builder()
                 .uuid(view.uuid())
                 .topicUuid(view.topicUuid())
                 .slug(view.slug())
@@ -45,6 +47,13 @@ public class QuestionQueryMapper {
                 .explanation(view.explanation())
                 .type(view.type())
                 .difficulty(view.difficulty())
+                .build();
+    }
+
+    public QuestionAnswerResponse toAnswerResponse(PublicQuestionAnswerView view) {
+        return QuestionAnswerResponse.builder()
+                .answer(view.answer())
+                .explanation(view.explanation())
                 .build();
     }
 }

@@ -1,8 +1,10 @@
 package com.example.quiz.content.question.mapper;
 
+import com.example.quiz.content.question.dto.AdminQuestionDetailsResponse;
 import com.example.quiz.content.question.dto.AdminQuestionListResponse;
 import com.example.quiz.content.question.dto.AdminQuestionResponse;
 import com.example.quiz.content.question.entity.Question;
+import com.example.quiz.content.question.query.AdminQuestionDetailsView;
 import com.example.quiz.content.question.query.AdminQuestionListView;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +52,30 @@ public class AdminQuestionQueryMapper {
                 question.getDifficulty(),
                 question.getType(),
                 question.getStatus()
+        );
+    }
+
+    /**
+     * Преобразовать модель вопроса в DTO детального просмотра
+     *
+     * @param view модель вопроса
+     * @return DTO вопроса
+     */
+    public AdminQuestionDetailsResponse toDetailsResponse(AdminQuestionDetailsView view) {
+        return new AdminQuestionDetailsResponse(
+                view.uuid(),
+                view.topicUuid(),
+                view.topicSlug(),
+                view.slug(),
+                view.question(),
+                view.answer(),
+                view.explanation(),
+                view.type(),
+                view.difficulty(),
+                view.status(),
+                view.createdAt(),
+                view.updatedAt(),
+                view.publishedAt()
         );
     }
 }

@@ -14,6 +14,21 @@ const router = createRouter({
       name: 'topic',
       component: () => import('../views/TopicView.vue'),
     },
+    {
+      path: '/admin/topics',
+      name: 'admin-topics',
+      component: () => import('../views/admin/AdminTopicsView.vue'),
+    },
+    {
+      path: '/admin/topics/:uuid/edit',
+      name: 'admin-topic-edit',
+      component: () => import('../views/admin/AdminTopicEditView.vue'),
+    },
+    {
+      path: '/admin/questions',
+      name: 'admin-questions',
+      component: () => import('../views/admin/AdminQuestionsView.vue'),
+    },
   ],
 })
 

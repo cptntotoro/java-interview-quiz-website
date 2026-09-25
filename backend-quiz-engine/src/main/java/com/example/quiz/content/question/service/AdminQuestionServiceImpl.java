@@ -12,6 +12,7 @@ import com.example.quiz.content.question.dto.AdminQuestionCreateRequest;
 import com.example.quiz.content.question.dto.AdminQuestionUpdateRequest;
 import com.example.quiz.content.question.entity.Question;
 import com.example.quiz.content.question.entity.QuestionDifficulty;
+import com.example.quiz.content.question.query.AdminQuestionDetailsView;
 import com.example.quiz.content.question.query.AdminQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
 import com.example.quiz.content.question.repository.AdminQuestionQueryRepository;
@@ -59,12 +60,12 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     }
 
     @Override
-    public PageResponse<AdminQuestionListView> find(QuestionDifficulty difficulty, ContentStatus status, int page,
+    public PageResponse<AdminQuestionListView> find(UUID topicUuid, QuestionDifficulty difficulty, ContentStatus status, int page,
                                                     int size, QuestionSortField sort, SortDirection direction) {
         validatePage(page);
         int normalizedSize = normalizeSize(size);
 
-        List<AdminQuestionListView> questions = questionQueryRepository.find(difficulty, status, page,
+        List<AdminQuestionListView> questions = questionQueryRepository.find(topicUuid, difficulty, status, page,
                 normalizedSize, sort, direction);
 
         boolean hasNext = questions.size() > normalizedSize;
@@ -251,6 +252,12 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
         question.setUpdatedAt(Instant.now());
 
         return questionRepository.save(question);
+    }
+
+    @Override
+    public AdminQuestionDetailsView findByUuid(UUID uuid) {
+        return questionQueryRepository.findByUuid(uuid)
+                .orElseThrow(() -> new QuestionNotFoundException(uuid));
     }
 
     private void validatePage(int page) {

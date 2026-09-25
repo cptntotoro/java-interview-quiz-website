@@ -43,6 +43,12 @@ public class AdminTopicController {
         this.adminTopicQueryMapper = adminTopicQueryMapper;
     }
 
+    @GetMapping("/{uuid}")
+    public AdminTopicResponse findByUuid(@PathVariable UUID uuid) {
+        Topic topic = adminTopicService.findByUuid(uuid);
+        return adminTopicMapper.toResponse(topic);
+    }
+
     @GetMapping
     public PageResponse<AdminTopicListResponse> find(@RequestParam(required = false) ContentStatus status,
                                                      @RequestParam(defaultValue = "0") int page,

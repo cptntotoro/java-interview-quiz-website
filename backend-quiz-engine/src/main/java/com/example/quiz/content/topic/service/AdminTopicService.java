@@ -58,4 +58,12 @@ public interface AdminTopicService {
      * @return тема
      */
     Topic archive(UUID uuid);
+
+    /**
+     * Получить тему по UUID
+     *
+     * @param uuid UUID темы
+     * @return тема
+     */
+    Topic findByUuid(UUID uuid);
 }

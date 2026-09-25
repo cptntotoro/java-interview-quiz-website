@@ -46,9 +46,10 @@ public class AdminQuestionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "UUID") QuestionSortField sort,
+            @RequestParam(required = false) UUID topicUuid,
             @RequestParam(defaultValue = "ASC") SortDirection direction
     ) {
-        PageResponse<AdminQuestionListView> result = adminQuestionService.find(difficulty, status, page,
+        PageResponse<AdminQuestionListView> result = adminQuestionService.find(topicUuid, difficulty, status, page,
                 size, sort, direction);
 
         return new PageResponse<>(
@@ -78,6 +79,11 @@ public class AdminQuestionController {
     public AdminQuestionResponse update(@PathVariable UUID uuid, @Valid @RequestBody AdminQuestionUpdateRequest request) {
         Question question = adminQuestionService.update(uuid, request);
         return adminQuestionQueryMapper.toResponse(question);
+    }
+
+    @GetMapping("/{uuid}")
+    public AdminQuestionDetailsResponse findByUuid(@PathVariable UUID uuid) {
+        return adminQuestionQueryMapper.toDetailsResponse(adminQuestionService.findByUuid(uuid));
     }
 
     @PatchMapping("/{uuid}/publish")
