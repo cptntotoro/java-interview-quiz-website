@@ -3,6 +3,7 @@ package com.example.quiz.content.question.repository;
 import com.example.quiz.common.query.SortDirection;
 import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.entity.QuestionType;
+import com.example.quiz.content.question.query.PublicQuestionAnswerView;
 import com.example.quiz.content.question.query.PublicQuestionDetailsView;
 import com.example.quiz.content.question.query.PublicQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
@@ -193,5 +194,24 @@ public class PublicQuestionQueryRepository {
                         QuestionDifficulty.valueOf(rs.getString("difficulty"))
                 ))
                 .list();
+    }
+
+    public Optional<PublicQuestionAnswerView> findPublishedAnswerBySlug(String slug) {
+        String sql = """
+            SELECT
+                q.answer,
+                q.explanation
+            FROM question q
+            WHERE q.slug = :slug
+              AND q.status = 'PUBLISHED'
+            """;
+
+        return jdbcClient.sql(sql)
+                .param("slug", slug)
+                .query((rs, rowNum) -> new PublicQuestionAnswerView(
+                        rs.getString("answer"),
+                        rs.getString("explanation")
+                ))
+                .optional();
     }
 }

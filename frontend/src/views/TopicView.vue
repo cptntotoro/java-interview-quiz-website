@@ -1,7 +1,8 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
-import {getPublicTopicBySlug} from '@/api/public/topics'
+import {getPublicQuestionsByTopic, getPublicTopicBySlug} from '@/api/public/topics'
+import QuestionCard from '@/components/QuestionCard.vue'
 
 const route = useRoute()
 
@@ -9,7 +10,11 @@ const topic = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
-onMounted(async () => {
+const questions = ref([])
+const questionsLoading = ref(true)
+const questionsError = ref(null)
+
+async function loadTopic() {
   try {
     topic.value = await getPublicTopicBySlug(route.params.slug)
   } catch (exception) {
@@ -17,6 +22,22 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+async function loadQuestions() {
+  try {
+    const response = await getPublicQuestionsByTopic(route.params.slug)
+    questions.value = response.content
+  } catch (exception) {
+    questionsError.value = 'Не удалось загрузить вопросы.'
+  } finally {
+    questionsLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadTopic()
+  loadQuestions()
 })
 </script>
 
@@ -36,6 +57,31 @@ onMounted(async () => {
       <p>
         {{ topic.description }}
       </p>
+
+      <div class="questions">
+        <h2>Вопросы</h2>
+
+        <p v-if="questionsLoading">
+          Загружаем вопросы...
+        </p>
+
+        <p v-else-if="questionsError">
+          {{ questionsError }}
+        </p>
+
+        <p v-else-if="questions.length === 0">
+          В этой теме пока нет вопросов.
+        </p>
+
+        <div v-else class="question-list">
+          <QuestionCard
+            v-for="question in questions"
+            :key="question.uuid"
+            :question="question.question"
+            :difficulty="question.difficulty"
+          />
+        </div>
+      </div>
     </section>
   </main>
 </template>
@@ -53,5 +99,19 @@ onMounted(async () => {
 
 .topic p {
   line-height: 1.6;
+}
+
+.questions {
+  margin-top: 48px;
+}
+
+.questions h2 {
+  margin-bottom: 20px;
+}
+
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 </style>
