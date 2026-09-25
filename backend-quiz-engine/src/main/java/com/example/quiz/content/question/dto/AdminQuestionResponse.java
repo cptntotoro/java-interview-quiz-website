@@ -3,6 +3,7 @@ package com.example.quiz.content.question.dto;
 import com.example.quiz.content.common.ContentStatus;
 import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.entity.QuestionType;
+import lombok.Builder;
 
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ import java.util.UUID;
  * @param type        тип
  * @param status      статус
  */
+@Builder
 public record AdminQuestionResponse(
         UUID uuid,
         UUID topicUuid,

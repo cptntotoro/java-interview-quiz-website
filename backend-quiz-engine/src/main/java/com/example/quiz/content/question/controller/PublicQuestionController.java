@@ -2,8 +2,9 @@ package com.example.quiz.content.question.controller;
 
 import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.query.SortDirection;
-import com.example.quiz.content.question.dto.PublicQuestionDetailsResponse;
+import com.example.quiz.content.question.dto.AdminQuestionResponse;
 import com.example.quiz.content.question.dto.PublicQuestionListResponse;
+import com.example.quiz.content.question.dto.QuestionAnswerResponse;
 import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.mapper.QuestionQueryMapper;
 import com.example.quiz.content.question.query.PublicQuestionListView;
@@ -44,8 +45,8 @@ public class PublicQuestionController {
     }
 
     @GetMapping("/{slug}")
-    public PublicQuestionDetailsResponse findPublishedBySlug(@PathVariable String slug) {
-        return questionQueryMapper.toDetailsResponse(publicQuestionService.findPublishedBySlug(slug));
+    public AdminQuestionResponse findPublishedBySlug(@PathVariable String slug) {
+        return questionQueryMapper.toQuestionResponse(publicQuestionService.findPublishedBySlug(slug));
     }
 
     @GetMapping("/topics/{topicSlug}/questions")
@@ -60,5 +61,10 @@ public class PublicQuestionController {
         return new PageResponse<>(result.content().stream()
                 .map(questionQueryMapper::toListResponse)
                 .toList(), result.page(), result.size(), result.hasNext());
+    }
+
+    @GetMapping("/{slug}/answer")
+    public QuestionAnswerResponse getAnswer(@PathVariable String slug) {
+        return questionQueryMapper.toAnswerResponse(publicQuestionService.findPublishedAnswerBySlug(slug));
     }
 }

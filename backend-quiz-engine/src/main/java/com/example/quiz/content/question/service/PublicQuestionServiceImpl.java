@@ -4,6 +4,7 @@ import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.exception.QuestionNotFoundException;
 import com.example.quiz.common.query.SortDirection;
 import com.example.quiz.content.question.entity.QuestionDifficulty;
+import com.example.quiz.content.question.query.PublicQuestionAnswerView;
 import com.example.quiz.content.question.query.PublicQuestionDetailsView;
 import com.example.quiz.content.question.query.PublicQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
@@ -70,6 +71,12 @@ public class PublicQuestionServiceImpl implements PublicQuestionService {
         }
 
         return new PageResponse<>(questions, page, normalizedSize, hasNext);
+    }
+
+    @Override
+    public PublicQuestionAnswerView findPublishedAnswerBySlug(String slug) {
+        return publicQuestionQueryRepository.findPublishedAnswerBySlug(slug)
+                .orElseThrow(() -> new QuestionNotFoundException(slug));
     }
 
     private void validatePage(int page) {

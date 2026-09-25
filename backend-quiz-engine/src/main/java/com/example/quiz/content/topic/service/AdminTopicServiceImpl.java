@@ -158,6 +158,12 @@ public class AdminTopicServiceImpl implements AdminTopicService {
         return topicRepository.save(topic);
     }
 
+    @Override
+    public Topic findByUuid(UUID uuid) {
+        return topicRepository.findById(uuid)
+                .orElseThrow(() -> new TopicNotFoundException(uuid));
+    }
+
     private void validatePage(int page) {
         if (page < 0) {
             throw new IllegalArgumentException("номер страницы должен быть больше или равен 0");

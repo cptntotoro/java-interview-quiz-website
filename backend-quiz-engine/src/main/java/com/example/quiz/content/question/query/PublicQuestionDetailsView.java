@@ -6,15 +6,15 @@ import com.example.quiz.content.question.entity.QuestionType;
 import java.util.UUID;
 
 /**
- * Содержание вопроса
+ * Модель публилчного содержания вопроса
  *
- * @param uuid UUID вопроса
- * @param topicUuid UUID темы
- * @param slug слаг
- * @param question вопрос
- * @param answer ответ
+ * @param uuid        UUID вопроса
+ * @param topicUuid   UUID темы
+ * @param slug        слаг
+ * @param question    вопрос
+ * @param answer      ответ
  * @param explanation объяснение
- * @param difficulty сложность
+ * @param difficulty  сложность
  */
 public record PublicQuestionDetailsView(
         UUID uuid,
