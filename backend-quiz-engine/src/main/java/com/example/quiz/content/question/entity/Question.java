@@ -33,8 +33,8 @@ public class Question {
     @Column(nullable = false)
     private String question;
 
-    @Column(nullable = false)
-    private String answer;
+    @Column(name = "reference_answer")
+    private String referenceAnswer;
 
     private String explanation;
 
@@ -42,9 +42,8 @@ public class Question {
     @Column(name = "question_type", nullable = false, length = 30)
     private QuestionType type;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private QuestionDifficulty difficulty;
+    @Column(name = "level_id", nullable = false)
+    private Short levelId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
