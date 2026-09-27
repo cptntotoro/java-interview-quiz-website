@@ -2,8 +2,6 @@ package com.example.quiz.content.question.mapper;
 
 import com.example.quiz.content.question.dto.AdminQuestionDetailsResponse;
 import com.example.quiz.content.question.dto.AdminQuestionListResponse;
-import com.example.quiz.content.question.dto.AdminQuestionResponse;
-import com.example.quiz.content.question.entity.Question;
 import com.example.quiz.content.question.query.AdminQuestionDetailsView;
 import com.example.quiz.content.question.query.AdminQuestionListView;
 import org.springframework.stereotype.Component;
@@ -21,38 +19,18 @@ public class AdminQuestionQueryMapper {
      * @return DTO ответа со списком вопросов в админке
      */
     public AdminQuestionListResponse toListResponse(AdminQuestionListView view) {
-        return new AdminQuestionListResponse(
-                view.uuid(),
-                view.topicUuid(),
-                view.topicSlug(),
-                view.slug(),
-                view.question(),
-                view.type(),
-                view.difficulty(),
-                view.status(),
-                view.createdAt(),
-                view.updatedAt()
-        );
-    }
-
-    /**
-     * Смаппить модель вопроса
-     *
-     * @param question вопрос
-     * @return DTO ответа с полным вопросом
-     */
-    public AdminQuestionResponse toResponse(Question question) {
-        return new AdminQuestionResponse(
-                question.getUuid(),
-                question.getTopicUuid(),
-                question.getSlug(),
-                question.getQuestion(),
-                question.getAnswer(),
-                question.getExplanation(),
-                question.getDifficulty(),
-                question.getType(),
-                question.getStatus()
-        );
+        return AdminQuestionListResponse.builder()
+                .uuid(view.uuid())
+                .topicUuid(view.topicUuid())
+                .topicSlug(view.topicSlug())
+                .slug(view.slug())
+                .question(view.question())
+                .type(view.type())
+                .levelId(view.levelId())
+                .status(view.status())
+                .createdAt(view.createdAt())
+                .updatedAt(view.updatedAt())
+                .build();
     }
 
     /**
@@ -62,20 +40,20 @@ public class AdminQuestionQueryMapper {
      * @return DTO вопроса
      */
     public AdminQuestionDetailsResponse toDetailsResponse(AdminQuestionDetailsView view) {
-        return new AdminQuestionDetailsResponse(
-                view.uuid(),
-                view.topicUuid(),
-                view.topicSlug(),
-                view.slug(),
-                view.question(),
-                view.answer(),
-                view.explanation(),
-                view.type(),
-                view.difficulty(),
-                view.status(),
-                view.createdAt(),
-                view.updatedAt(),
-                view.publishedAt()
-        );
+        return AdminQuestionDetailsResponse.builder()
+                .uuid(view.uuid())
+                .topicUuid(view.topicUuid())
+                .topicSlug(view.topicSlug())
+                .slug(view.slug())
+                .question(view.question())
+                .referenceAnswer(view.referenceAnswer())
+                .explanation(view.explanation())
+                .type(view.type())
+                .levelId(view.levelId())
+                .status(view.status())
+                .createdAt(view.createdAt())
+                .updatedAt(view.updatedAt())
+                .publishedAt(view.publishedAt())
+                .build();
     }
 }

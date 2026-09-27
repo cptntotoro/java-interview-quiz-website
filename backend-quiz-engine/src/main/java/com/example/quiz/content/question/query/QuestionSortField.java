@@ -7,7 +7,7 @@ public enum QuestionSortField {
 
     UUID("q.uuid"),
     SLUG("q.slug"),
-    DIFFICULTY("q.difficulty");
+    LEVEL("q.level_id");
 
     private final String sqlExpression;
 

@@ -1,21 +1,22 @@
 package com.example.quiz.content.question.dto;
 
-import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.entity.QuestionType;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
  * DTO запроса на обновление вопроса
  *
- * @param topicUuid   UUID темы
- * @param question    вопрос
- * @param answer      ответ
- * @param explanation объяснение
- * @param type        тип
- * @param difficulty  сложность
+ * @param topicUuid       UUID темы
+ * @param question        вопрос
+ * @param referenceAnswer ответ
+ * @param explanation     объяснение
+ * @param type            тип
+ * @param levelId         идентификатор уровня
  */
 public record AdminQuestionUpdateRequest(
 
@@ -25,8 +26,7 @@ public record AdminQuestionUpdateRequest(
         @NotBlank
         String question,
 
-        @NotBlank
-        String answer,
+        String referenceAnswer,
 
         String explanation,
 
@@ -34,6 +34,12 @@ public record AdminQuestionUpdateRequest(
         QuestionType type,
 
         @NotNull
-        QuestionDifficulty difficulty
+        Short levelId,
+
+        List<@Valid AdminQuestionOptionRequest> options,
+
+        List<@Valid AdminQuestionMatchingPairRequest> matchingPairs,
+
+        List<@Valid AdminQuestionOrderItemRequest> orderItems
 ) {
 }

@@ -1,10 +1,10 @@
 package com.example.quiz.content.question.dto;
 
 import com.example.quiz.content.common.ContentStatus;
-import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.entity.QuestionType;
 import lombok.Builder;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -12,13 +12,13 @@ import java.util.UUID;
  *
  * @param uuid
  * @param topicUuid
- * @param slug        слаг
- * @param question    вопрос
- * @param answer      ответ
- * @param explanation объяснение
- * @param difficulty  сложность
- * @param type        тип
- * @param status      статус
+ * @param slug            слаг
+ * @param question        вопрос
+ * @param referenceAnswer ответ
+ * @param explanation     объяснение
+ * @param levelId         идентификатор уровня
+ * @param type            тип
+ * @param status          статус
  */
 @Builder
 public record AdminQuestionResponse(
@@ -26,10 +26,12 @@ public record AdminQuestionResponse(
         UUID topicUuid,
         String slug,
         String question,
-        String answer,
+        String referenceAnswer,
         String explanation,
-        QuestionDifficulty difficulty,
+        Short levelId,
         QuestionType type,
-        ContentStatus status
+        ContentStatus status,
+        Instant createdAt,
+        Instant updatedAt
 ) {
 }

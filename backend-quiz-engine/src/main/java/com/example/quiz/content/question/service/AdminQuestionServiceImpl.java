@@ -3,7 +3,6 @@ package com.example.quiz.content.question.service;
 import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.exception.DuplicateSlugException;
 import com.example.quiz.common.exception.QuestionNotFoundException;
-import com.example.quiz.common.exception.TopicNotFoundException;
 import com.example.quiz.common.query.SortDirection;
 import com.example.quiz.content.common.ContentStatus;
 import com.example.quiz.content.question.dto.AdminQuestionBatchCreateRequest;
@@ -11,14 +10,12 @@ import com.example.quiz.content.question.dto.AdminQuestionBatchPublishRequest;
 import com.example.quiz.content.question.dto.AdminQuestionCreateRequest;
 import com.example.quiz.content.question.dto.AdminQuestionUpdateRequest;
 import com.example.quiz.content.question.entity.Question;
-import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.query.AdminQuestionDetailsView;
 import com.example.quiz.content.question.query.AdminQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
 import com.example.quiz.content.question.repository.AdminQuestionQueryRepository;
 import com.example.quiz.content.question.repository.QuestionRepository;
-import com.example.quiz.content.topic.entity.Topic;
-import com.example.quiz.content.topic.repository.TopicRepository;
+import com.example.quiz.content.topic.service.TopicService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,29 +40,43 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     private final QuestionRepository questionRepository;
 
     /**
-     * Репозиторий тем
+     * Сервис тем
      */
-    private final TopicRepository topicRepository;
+    private final TopicService topicService;
 
     /**
      * Репозиторий для чтения вопросов в админке
      */
     private final AdminQuestionQueryRepository questionQueryRepository;
 
-    public AdminQuestionServiceImpl(QuestionRepository questionRepository, TopicRepository topicRepository,
-                                    AdminQuestionQueryRepository questionQueryRepository) {
+    /**
+     * Сервис структуры ответа вопроса
+     */
+    private final QuestionStructureService questionStructureService;
+
+    /**
+     * Валидатор структуры вопроса
+     */
+    private final QuestionStructureValidator questionStructureValidator;
+
+    public AdminQuestionServiceImpl(QuestionRepository questionRepository, TopicService topicService,
+                                    AdminQuestionQueryRepository questionQueryRepository,
+                                    QuestionStructureService questionStructureService,
+                                    QuestionStructureValidator questionStructureValidator) {
         this.questionRepository = questionRepository;
-        this.topicRepository = topicRepository;
+        this.topicService = topicService;
         this.questionQueryRepository = questionQueryRepository;
+        this.questionStructureService = questionStructureService;
+        this.questionStructureValidator = questionStructureValidator;
     }
 
     @Override
-    public PageResponse<AdminQuestionListView> find(UUID topicUuid, QuestionDifficulty difficulty, ContentStatus status, int page,
+    public PageResponse<AdminQuestionListView> find(UUID topicUuid, Short levelId, ContentStatus status, int page,
                                                     int size, QuestionSortField sort, SortDirection direction) {
         validatePage(page);
         int normalizedSize = normalizeSize(size);
 
-        List<AdminQuestionListView> questions = questionQueryRepository.find(topicUuid, difficulty, status, page,
+        List<AdminQuestionListView> questions = questionQueryRepository.find(topicUuid, levelId, status, page,
                 normalizedSize, sort, direction);
 
         boolean hasNext = questions.size() > normalizedSize;
@@ -80,113 +91,76 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     @Transactional
     @Override
     public Question create(AdminQuestionCreateRequest request) {
-        if (!topicRepository.existsById(request.topicUuid())) {
-            throw new TopicNotFoundException(request.topicUuid());
-        }
-
-        if (questionRepository.existsBySlug(request.slug())) {
-            throw new DuplicateSlugException(request.slug());
-        }
+        topicService.validateExists(request.topicUuid());
+        validateSlug(request.slug());
+        questionStructureValidator.validate(request);
 
         Instant now = Instant.now();
 
-        Question question = new Question();
-        question.setTopicUuid(request.topicUuid());
-        question.setSlug(request.slug());
-        question.setQuestion(request.question());
-        question.setAnswer(request.answer());
-        question.setExplanation(request.explanation());
-        question.setType(request.type());
-        question.setDifficulty(request.difficulty());
-        question.setStatus(ContentStatus.DRAFT);
-        question.setCreatedAt(now);
-        question.setUpdatedAt(now);
+        Question question = createQuestion(request, now);
 
-        return questionRepository.save(question);
+        Question savedQuestion = questionRepository.save(question);
+        questionStructureService.save(savedQuestion.getUuid(), request);
+
+        return savedQuestion;
     }
 
     @Transactional
     @Override
     public List<Question> createBatch(AdminQuestionBatchCreateRequest request) {
-        Set<String> slugs = request.questions().stream()
-                .map(AdminQuestionCreateRequest::slug)
-                .collect(Collectors.toSet());
+        validateBatchSlugs(request.questions());
+        validateExistingSlugs(request.questions());
+        validateTopics(request.questions());
 
-        if (slugs.size() != request.questions().size()) {
-            throw new DuplicateSlugException("В запросе присутствуют одинаковые слаги");
-        }
-
-        Set<String> existingSlugs = questionRepository.findExistingSlugs(slugs);
-
-        if (!existingSlugs.isEmpty()) {
-            throw new DuplicateSlugException("Вопросы с такими слагами уже существуют: " + existingSlugs);
-        }
-
-        Set<UUID> topicUuids = request.questions().stream()
-                .map(AdminQuestionCreateRequest::topicUuid)
-                .collect(Collectors.toSet());
-
-        Set<UUID> existingTopicUuids = topicRepository.findAllById(topicUuids).stream()
-                .map(Topic::getUuid)
-                .collect(Collectors.toSet());
-
-        if (existingTopicUuids.size() != topicUuids.size()) {
-            Set<UUID> missingTopicUuids = new HashSet<>(topicUuids);
-            missingTopicUuids.removeAll(existingTopicUuids);
-
-            throw new TopicNotFoundException(String.valueOf(missingTopicUuids));
-        }
+        request.questions()
+                .forEach(questionStructureValidator::validate);
 
         Instant now = Instant.now();
 
         List<Question> questions = request.questions().stream()
-                .map(questionRequest -> {
-                    Question question = new Question();
+                .map(questionRequest -> createQuestion(questionRequest, now))
+                .toList();
 
-                    question.setUuid(UUID.randomUUID());
-                    question.setTopicUuid(questionRequest.topicUuid());
-                    question.setSlug(questionRequest.slug());
-                    question.setQuestion(questionRequest.question());
-                    question.setAnswer(questionRequest.answer());
-                    question.setExplanation(questionRequest.explanation());
-                    question.setType(questionRequest.type());
-                    question.setDifficulty(questionRequest.difficulty());
-                    question.setStatus(ContentStatus.DRAFT);
-                    question.setCreatedAt(now);
-                    question.setUpdatedAt(now);
+        List<Question> savedQuestions = questionRepository.saveAll(questions);
 
-                    return question;
-                }).toList();
+        for (int i = 0; i < savedQuestions.size(); i++) {
+            questionStructureService.save(
+                    savedQuestions.get(i).getUuid(),
+                    request.questions().get(i)
+            );
+        }
 
-        return questionRepository.saveAll(questions);
+        return savedQuestions;
     }
 
     @Transactional
     @Override
     public Question update(UUID uuid, AdminQuestionUpdateRequest request) {
-        Question question = questionRepository.findById(uuid)
-                .orElseThrow(() -> new QuestionNotFoundException(uuid));
+        Question question = findQuestion(uuid);
 
-        if (!topicRepository.existsById(request.topicUuid())) {
-            throw new TopicNotFoundException(request.topicUuid());
-        }
+        topicService.validateExists(request.topicUuid());
+
+        questionStructureValidator.validate(request);
 
         question.setTopicUuid(request.topicUuid());
         question.setQuestion(request.question());
-        question.setAnswer(request.answer());
+        question.setReferenceAnswer(request.referenceAnswer());
         question.setExplanation(request.explanation());
         question.setType(request.type());
-        question.setDifficulty(request.difficulty());
+        question.setLevelId(request.levelId());
         question.setUpdatedAt(Instant.now());
 
-        return questionRepository.save(question);
+        Question savedQuestion = questionRepository.save(question);
+
+        questionStructureService.replace(uuid, request);
+
+        return savedQuestion;
     }
 
     @Transactional
     @Override
     public Question publish(UUID uuid) {
-        Question question = questionRepository.findById(uuid)
-                .orElseThrow(() -> new QuestionNotFoundException(uuid));
+        Question question = findQuestion(uuid);
 
         if (!question.getStatus().canPublish()) {
             throw new IllegalStateException("Только вопросы из черновика могут быть опубликованы");
@@ -204,11 +178,7 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     @Transactional
     @Override
     public List<Question> publishBatch(AdminQuestionBatchPublishRequest request) {
-        Set<UUID> requestedUuids = new HashSet<>(request.uuids());
-
-        if (requestedUuids.size() != request.uuids().size()) {
-            throw new IllegalArgumentException("В запросе присутствуют одинаковые UUID");
-        }
+        Set<UUID> requestedUuids = validateUniqueUuids(request.uuids());
 
         List<Question> questions = questionRepository.findAllById(requestedUuids);
 
@@ -227,7 +197,9 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
 
         for (Question question : questions) {
             if (!question.getStatus().canPublish()) {
-                throw new IllegalStateException("Только вопросы из черновика могут быть опубликованы: " + question.getUuid());
+                throw new IllegalStateException(
+                        "Только вопросы из черновика могут быть опубликованы: " + question.getUuid()
+                );
             }
 
             question.setStatus(ContentStatus.PUBLISHED);
@@ -241,8 +213,7 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     @Transactional
     @Override
     public Question archive(UUID uuid) {
-        Question question = questionRepository.findById(uuid)
-                .orElseThrow(() -> new QuestionNotFoundException(uuid));
+        Question question = findQuestion(uuid);
 
         if (!question.getStatus().canArchive()) {
             throw new IllegalStateException("Архивированные вопросы не могут быть архивированы");
@@ -257,6 +228,74 @@ public class AdminQuestionServiceImpl implements AdminQuestionService {
     @Override
     public AdminQuestionDetailsView findByUuid(UUID uuid) {
         return questionQueryRepository.findByUuid(uuid)
+                .orElseThrow(() -> new QuestionNotFoundException(uuid));
+    }
+
+    private Question createQuestion(AdminQuestionCreateRequest request, Instant now) {
+        Question question = new Question();
+        question.setTopicUuid(request.topicUuid());
+        question.setSlug(request.slug());
+        question.setQuestion(request.question());
+        question.setReferenceAnswer(request.referenceAnswer());
+        question.setExplanation(request.explanation());
+        question.setType(request.type());
+        question.setLevelId(request.levelId());
+        question.setStatus(ContentStatus.DRAFT);
+        question.setCreatedAt(now);
+        question.setUpdatedAt(now);
+        return question;
+    }
+
+    private void validateTopics(List<AdminQuestionCreateRequest> requests) {
+        Set<UUID> topicUuids = requests.stream()
+                .map(AdminQuestionCreateRequest::topicUuid)
+                .collect(Collectors.toSet());
+
+        topicService.validateExists(topicUuids);
+    }
+
+    private void validateExistingSlugs(List<AdminQuestionCreateRequest> requests) {
+        Set<String> slugs = requests.stream()
+                .map(AdminQuestionCreateRequest::slug)
+                .collect(Collectors.toSet());
+
+        Set<String> existingSlugs = questionRepository.findExistingSlugs(slugs);
+
+        if (!existingSlugs.isEmpty()) {
+            throw new DuplicateSlugException(
+                    "Вопросы с такими слагами уже существуют: " + existingSlugs
+            );
+        }
+    }
+
+    private void validateBatchSlugs(List<AdminQuestionCreateRequest> requests) {
+        Set<String> slugs = requests.stream()
+                .map(AdminQuestionCreateRequest::slug)
+                .collect(Collectors.toSet());
+
+        if (slugs.size() != requests.size()) {
+            throw new DuplicateSlugException("В запросе присутствуют одинаковые слаги");
+        }
+    }
+
+    private Set<UUID> validateUniqueUuids(List<UUID> uuids) {
+        Set<UUID> uniqueUuids = new HashSet<>(uuids);
+
+        if (uniqueUuids.size() != uuids.size()) {
+            throw new IllegalArgumentException("В запросе присутствуют одинаковые UUID");
+        }
+
+        return uniqueUuids;
+    }
+
+    private void validateSlug(String slug) {
+        if (questionRepository.existsBySlug(slug)) {
+            throw new DuplicateSlugException(slug);
+        }
+    }
+    
+    private Question findQuestion(UUID uuid) {
+        return questionRepository.findById(uuid)
                 .orElseThrow(() -> new QuestionNotFoundException(uuid));
     }
 

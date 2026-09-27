@@ -3,7 +3,6 @@ package com.example.quiz.content.question.service;
 import com.example.quiz.common.dto.PageResponse;
 import com.example.quiz.common.exception.QuestionNotFoundException;
 import com.example.quiz.common.query.SortDirection;
-import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.query.PublicQuestionAnswerView;
 import com.example.quiz.content.question.query.PublicQuestionDetailsView;
 import com.example.quiz.content.question.query.PublicQuestionListView;
@@ -31,12 +30,12 @@ public class PublicQuestionServiceImpl implements PublicQuestionService {
     }
 
     @Override
-    public PageResponse<PublicQuestionListView> findPublishedByDifficulty(QuestionDifficulty difficulty, int page, int size,
+    public PageResponse<PublicQuestionListView> findPublishedByDifficulty(Short levelId, int page, int size,
                                                                           QuestionSortField sort, SortDirection direction) {
         validatePage(page);
         int normalizedSize = normalizeSize(size);
 
-        List<PublicQuestionListView> questions = publicQuestionQueryRepository.findPublished(difficulty, page, normalizedSize,
+        List<PublicQuestionListView> questions = publicQuestionQueryRepository.findPublished(levelId, page, normalizedSize,
                 sort, direction);
 
         boolean hasNext = questions.size() > normalizedSize;
@@ -55,13 +54,13 @@ public class PublicQuestionServiceImpl implements PublicQuestionService {
     }
 
     @Override
-    public PageResponse<PublicQuestionListView> findPublishedByTopicAndDifficulty(String topicSlug, QuestionDifficulty difficulty,
+    public PageResponse<PublicQuestionListView> findPublishedByTopicAndDifficulty(String topicSlug, Short levelId,
                                                                                   int page, int size, QuestionSortField sort,
                                                                                   SortDirection direction) {
         validatePage(page);
         int normalizedSize = normalizeSize(size);
 
-        List<PublicQuestionListView> questions = publicQuestionQueryRepository.findPublishedByTopic(topicSlug, difficulty,
+        List<PublicQuestionListView> questions = publicQuestionQueryRepository.findPublishedByTopic(topicSlug, levelId,
                 page, normalizedSize, sort, direction);
 
         boolean hasNext = questions.size() > normalizedSize;
