@@ -5,12 +5,12 @@ import lombok.Builder;
 /**
  * Ответ на вопрос
  *
- * @param answer      эталонный ответ
- * @param explanation объяснение
+ * @param referenceAnswer эталонный ответ
+ * @param explanation     объяснение
  */
 @Builder
 public record QuestionAnswerResponse(
-        String answer,
+        String referenceAnswer,
         String explanation
 ) {
 }

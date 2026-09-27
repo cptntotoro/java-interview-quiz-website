@@ -2,7 +2,6 @@ package com.example.quiz.content.question.repository;
 
 import com.example.quiz.common.query.SortDirection;
 import com.example.quiz.content.common.ContentStatus;
-import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.entity.QuestionType;
 import com.example.quiz.content.question.query.AdminQuestionDetailsView;
 import com.example.quiz.content.question.query.AdminQuestionListView;
@@ -29,15 +28,15 @@ public class AdminQuestionQueryRepository {
     /**
      * Получить страницу вопросов для админки
      *
-     * @param difficulty фильтр по сложности
-     * @param status     фильтр по статусу
-     * @param page       номер страницы (0-based)
-     * @param size       размер страницы + 1 запись
-     * @param sort       параметр сортировки
-     * @param direction  направление сортировки
+     * @param levelId   дентификатор уровня
+     * @param status    фильтр по статусу
+     * @param page      номер страницы (0-based)
+     * @param size      размер страницы + 1 запись
+     * @param sort      параметр сортировки
+     * @param direction направление сортировки
      * @return список вопросов
      */
-    public List<AdminQuestionListView> find(UUID topicUuid, QuestionDifficulty difficulty, ContentStatus status,
+    public List<AdminQuestionListView> find(UUID topicUuid, Short levelId, ContentStatus status,
                                             int page, int size, QuestionSortField sort, SortDirection direction) {
 
         int offset = page * size;
@@ -50,7 +49,7 @@ public class AdminQuestionQueryRepository {
         }
 
         String topicCondition = topicUuid == null ? "" : " AND q.topic_uuid = :topicUuid";
-        String difficultyCondition = difficulty == null ? "" : " AND q.difficulty = :difficulty";
+        String levelCondition = levelId == null ? "" : " AND q.level_id = :levelId";
         String statusCondition = status == null ? "" : " AND q.status = :status";
 
         String sql = """
@@ -61,7 +60,7 @@ public class AdminQuestionQueryRepository {
                     q.slug,
                     q.question,
                     q.question_type,
-                    q.difficulty,
+                    q.level_id,
                     q.status,
                     q.created_at,
                     q.updated_at
@@ -76,7 +75,7 @@ public class AdminQuestionQueryRepository {
                 OFFSET :offset
                 """.formatted(
                 topicCondition,
-                difficultyCondition,
+                levelCondition,
                 statusCondition,
                 orderBy
         );
@@ -89,8 +88,8 @@ public class AdminQuestionQueryRepository {
             query = query.param("topicUuid", topicUuid);
         }
 
-        if (difficulty != null) {
-            query = query.param("difficulty", difficulty.name());
+        if (levelId != null) {
+            query = query.param("levelId", levelId);
         }
 
         if (status != null) {
@@ -105,7 +104,7 @@ public class AdminQuestionQueryRepository {
                         rs.getString("slug"),
                         rs.getString("question"),
                         QuestionType.valueOf(rs.getString("question_type")),
-                        QuestionDifficulty.valueOf(rs.getString("difficulty")),
+                        rs.getObject("level_id", Short.class),
                         ContentStatus.valueOf(rs.getString("status")),
                         rs.getTimestamp("created_at").toInstant(),
                         rs.getTimestamp("updated_at").toInstant()
@@ -127,10 +126,10 @@ public class AdminQuestionQueryRepository {
                             t.slug AS topic_slug,
                             q.slug,
                             q.question,
-                            q.answer,
+                            q.reference_answer,
                             q.explanation,
                             q.question_type,
-                            q.difficulty,
+                            q.level_id,
                             q.status,
                             q.created_at,
                             q.updated_at,
@@ -146,16 +145,13 @@ public class AdminQuestionQueryRepository {
                         rs.getString("topic_slug"),
                         rs.getString("slug"),
                         rs.getString("question"),
-                        rs.getString("answer"),
+                        rs.getString("reference_answer"),
                         rs.getString("explanation"),
                         QuestionType.valueOf(rs.getString("question_type")),
-                        QuestionDifficulty.valueOf(rs.getString("difficulty")),
-                        ContentStatus.valueOf(rs.getString("status")),
+                        rs.getObject("level_id", Short.class),                        ContentStatus.valueOf(rs.getString("status")),
                         rs.getTimestamp("created_at").toInstant(),
                         rs.getTimestamp("updated_at").toInstant(),
-                        rs.getTimestamp("published_at") == null
-                                ? null
-                                : rs.getTimestamp("published_at").toInstant()
+                        rs.getTimestamp("published_at") == null ? null : rs.getTimestamp("published_at").toInstant()
                 ))
                 .optional();
     }

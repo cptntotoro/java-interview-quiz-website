@@ -8,7 +8,6 @@ import com.example.quiz.content.question.dto.AdminQuestionBatchPublishRequest;
 import com.example.quiz.content.question.dto.AdminQuestionCreateRequest;
 import com.example.quiz.content.question.dto.AdminQuestionUpdateRequest;
 import com.example.quiz.content.question.entity.Question;
-import com.example.quiz.content.question.entity.QuestionDifficulty;
 import com.example.quiz.content.question.query.AdminQuestionDetailsView;
 import com.example.quiz.content.question.query.AdminQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
@@ -23,15 +22,15 @@ public interface AdminQuestionService {
     /**
      * Получить вопросы с фильтрами
      *
-     * @param difficulty фильтр по сложности
-     * @param status     фильтр по статусу
-     * @param page       номер страницы (0-based)
-     * @param size       размер страницы
-     * @param sort       параметр сортировки
-     * @param direction  направление сортировки
+     * @param levelId   идентификатор уровня
+     * @param status    фильтр по статусу
+     * @param page      номер страницы (0-based)
+     * @param size      размер страницы
+     * @param sort      параметр сортировки
+     * @param direction направление сортировки
      * @return страница вопросов
      */
-    PageResponse<AdminQuestionListView> find(UUID topicUuid, QuestionDifficulty difficulty, ContentStatus status, int page, int size,
+    PageResponse<AdminQuestionListView> find(UUID topicUuid, Short levelId, ContentStatus status, int page, int size,
                                              QuestionSortField sort, SortDirection direction);
 
     /**

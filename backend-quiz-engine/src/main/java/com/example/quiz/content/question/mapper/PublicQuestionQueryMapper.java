@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * Маппер вопросов из БД в DTO ответа
  */
 @Component
-public class QuestionQueryMapper {
+public class PublicQuestionQueryMapper {
 
     /**
      * Смаппить предпросмотр вопроса (для списка) в DTO ответа
@@ -27,14 +27,14 @@ public class QuestionQueryMapper {
                 .slug(view.slug())
                 .question(view.question())
                 .type(view.type())
-                .difficulty(view.difficulty())
+                .levelId(view.levelId())
                 .build();
     }
 
     /**
      * Смаппить ответ с содержанием вопроса в DTO ответа
      *
-     * @param view содержание вопроса
+     * @param view модель публилчного содержания вопроса
      * @return DTO ответа с содержанием вопроса
      */
     public AdminQuestionResponse toQuestionResponse(PublicQuestionDetailsView view) {
@@ -43,16 +43,22 @@ public class QuestionQueryMapper {
                 .topicUuid(view.topicUuid())
                 .slug(view.slug())
                 .question(view.question())
-                .answer(view.answer())
+                .referenceAnswer(view.referenceAnswer())
                 .explanation(view.explanation())
                 .type(view.type())
-                .difficulty(view.difficulty())
+                .levelId(view.levelId())
                 .build();
     }
 
+    /**
+     * Смаппить ответ в DTO ответа
+     *
+     * @param view модель ответа и объяснения опубликованного вопроса
+     * @return Ответ на вопрос
+     */
     public QuestionAnswerResponse toAnswerResponse(PublicQuestionAnswerView view) {
         return QuestionAnswerResponse.builder()
-                .answer(view.answer())
+                .referenceAnswer(view.referenceAnswer())
                 .explanation(view.explanation())
                 .build();
     }

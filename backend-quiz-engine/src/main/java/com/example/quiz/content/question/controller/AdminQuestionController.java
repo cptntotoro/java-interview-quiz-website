@@ -5,7 +5,7 @@ import com.example.quiz.common.query.SortDirection;
 import com.example.quiz.content.common.ContentStatus;
 import com.example.quiz.content.question.dto.*;
 import com.example.quiz.content.question.entity.Question;
-import com.example.quiz.content.question.entity.QuestionDifficulty;
+import com.example.quiz.content.question.mapper.AdminQuestionMapper;
 import com.example.quiz.content.question.mapper.AdminQuestionQueryMapper;
 import com.example.quiz.content.question.query.AdminQuestionListView;
 import com.example.quiz.content.question.query.QuestionSortField;
@@ -33,15 +33,22 @@ public class AdminQuestionController {
      */
     private final AdminQuestionQueryMapper adminQuestionQueryMapper;
 
+    /**
+     * Маппер сущности вопроса в DTO
+     */
+    private final AdminQuestionMapper adminQuestionMapper;
+
     public AdminQuestionController(AdminQuestionService adminQuestionService,
-                                   AdminQuestionQueryMapper adminQuestionQueryMapper) {
+                                   AdminQuestionQueryMapper adminQuestionQueryMapper,
+                                   AdminQuestionMapper adminQuestionMapper) {
         this.adminQuestionService = adminQuestionService;
         this.adminQuestionQueryMapper = adminQuestionQueryMapper;
+        this.adminQuestionMapper = adminQuestionMapper;
     }
 
     @GetMapping
     public PageResponse<AdminQuestionListResponse> find(
-            @RequestParam(required = false) QuestionDifficulty difficulty,
+            @RequestParam(required = false) Short levelId,
             @RequestParam(required = false) ContentStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -49,7 +56,7 @@ public class AdminQuestionController {
             @RequestParam(required = false) UUID topicUuid,
             @RequestParam(defaultValue = "ASC") SortDirection direction
     ) {
-        PageResponse<AdminQuestionListView> result = adminQuestionService.find(topicUuid, difficulty, status, page,
+        PageResponse<AdminQuestionListView> result = adminQuestionService.find(topicUuid, levelId, status, page,
                 size, sort, direction);
 
         return new PageResponse<>(
@@ -65,20 +72,20 @@ public class AdminQuestionController {
     @PostMapping
     public AdminQuestionResponse create(@Valid @RequestBody AdminQuestionCreateRequest request) {
         Question question = adminQuestionService.create(request);
-        return adminQuestionQueryMapper.toResponse(question);
+        return adminQuestionMapper.toResponse(question);
     }
 
     @PostMapping("/batch")
     public AdminQuestionBatchResponse createBatch(@Valid @RequestBody AdminQuestionBatchCreateRequest request) {
         List<Question> questions = adminQuestionService.createBatch(request);
-        List<AdminQuestionResponse> responses = questions.stream().map(adminQuestionQueryMapper::toResponse).toList();
+        List<AdminQuestionResponse> responses = questions.stream().map(adminQuestionMapper::toResponse).toList();
         return new AdminQuestionBatchResponse(responses);
     }
 
     @PutMapping("/{uuid}")
     public AdminQuestionResponse update(@PathVariable UUID uuid, @Valid @RequestBody AdminQuestionUpdateRequest request) {
         Question question = adminQuestionService.update(uuid, request);
-        return adminQuestionQueryMapper.toResponse(question);
+        return adminQuestionMapper.toResponse(question);
     }
 
     @GetMapping("/{uuid}")
@@ -89,14 +96,14 @@ public class AdminQuestionController {
     @PatchMapping("/{uuid}/publish")
     public AdminQuestionResponse publish(@PathVariable UUID uuid) {
         Question question = adminQuestionService.publish(uuid);
-        return adminQuestionQueryMapper.toResponse(question);
+        return adminQuestionMapper.toResponse(question);
     }
 
     @PostMapping("/batch/publish")
     public AdminQuestionBatchResponse publishBatch(@Valid @RequestBody AdminQuestionBatchPublishRequest request) {
         List<Question> questions = adminQuestionService.publishBatch(request);
         List<AdminQuestionResponse> responses = questions.stream()
-                .map(adminQuestionQueryMapper::toResponse)
+                .map(adminQuestionMapper::toResponse)
                 .toList();
         return new AdminQuestionBatchResponse(responses);
     }
@@ -104,6 +111,6 @@ public class AdminQuestionController {
     @PatchMapping("/{uuid}/archive")
     public AdminQuestionResponse archive(@PathVariable UUID uuid) {
         Question question = adminQuestionService.archive(uuid);
-        return adminQuestionQueryMapper.toResponse(question);
+        return adminQuestionMapper.toResponse(question);
     }
 }
